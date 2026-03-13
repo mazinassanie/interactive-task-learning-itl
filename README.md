@@ -1,22 +1,18 @@
-# Interactive Task Learning (ITL) Framework V2 🗣️🎓
+# ITL Framework (HTN Advanced) 🗣️🏗️
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](https://opensource.org/licenses/MIT)
 
-A robust framework enabling AI agents to learn new procedural tasks from natural language instructions. This version introduces **conditional logic parsing** and **dynamic procedural memory encoding**, allowing agents to learn rules, not just simple commands.
+A high-fidelity framework implementing **Hierarchical Task Networks (HTN)** for autonomous task learning and planning. This allows the agent to decompose high-level instructions into executable primitive operators.
 
 ## 🚀 Key Upgrades
-- **Conditional Parsing**: Supports complex "If-Then" rule structures, enabling the learning of constraints and reactive behaviors.
-- **Procedural Memory (PM)**: A dedicated memory store for learned operators and rules.
-- **World State Validation**: Simulates environment checks to ensure learned tasks are grounded in reality.
+- **HTN Planner**: Decomposes complex tasks (e.g., "fetch") into a structured sequence of primitive actions.
+- **Hierarchical Decomposition**: Supports mapping natural language instructions to multi-level task networks.
+- **Primitive Operator Execution**: Concrete implementation of low-level robotic/simulated actions.
 
 ## 📂 Architecture
-- `src/itl.py`: Contains `InstructionParser`, `ProceduralMemory`, and `WorldState`.
-- `examples/teach_agent.py`: A script demonstrating how to teach an agent safety rules and manipulation tasks.
+- `src/itl.py`: Contains the `HTN` logic and `ITLAgent`.
 
 ## 🛠️ Usage
 ```bash
-python -m examples.teach_agent
+python -m src.itl
 ```
-
-## 📚 Research Context
-Based on "Interactive Task Learning" (Laird et al.), focusing on One-Shot Learning of hierarchical task networks through natural interaction.

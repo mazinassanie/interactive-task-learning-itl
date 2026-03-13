@@ -1,64 +1,41 @@
-class WorldState:
-    """
-    Simulated environment state to validate if tasks are achievable.
-    """
-    def __init__(self):
-        self.objects = {"red_block": "table", "blue_box": "shelf"}
-        self.agent_hand = None
-
-    def check_object(self, obj):
-        return obj in self.objects
-
-class ProceduralMemory:
-    """
-    Stores learned task structures (Operator representations).
-    """
-    def __init__(self):
-        self.learned_tasks = {}
-
-    def add_task(self, name, procedure):
-        print(f"[PM] Learning new task: {name} -> {procedure}")
-        self.learned_tasks[name] = procedure
-
-class InstructionParser:
-    def __init__(self):
-        self.core_vocabulary = ["pick", "place", "move", "if", "then"]
-
-    def parse_conditional(self, instruction):
-        """
-        Parses complex conditional instructions: 'If [condition], then [action]'
-        """
-        instruction = instruction.lower()
-        if "if" in instruction and "then" in instruction:
-            parts = instruction.split("then")
-            condition_part = parts[0].replace("if", "").strip()
-            action_part = parts[1].strip()
-            return {
-                "type": "conditional",
-                "condition": self._extract_predicate(condition_part),
-                "action": self._extract_action(action_part)
-            }
-        else:
-            return {"type": "simple", "action": self._extract_action(instruction)}
-
-    def _extract_action(self, text):
-        return f"op_{text.replace(' ', '_')}"
-
-    def _extract_predicate(self, text):
-        return f"pred_{text.replace(' ', '_')}"
+class HTNTask:
+    def __init__(self, name, is_primitive=True):
+        self.name = name
+        self.is_primitive = is_primitive
+        self.methods = [] # For non-primitive tasks
 
 class ITLAgent:
+    """
+    Advanced ITL Agent using Hierarchical Task Networks (HTN) for planning.
+    """
     def __init__(self):
-        self.world = WorldState()
-        self.pm = ProceduralMemory()
-        self.parser = InstructionParser()
+        self.primitive_operators = {
+            "move_to": lambda target: f"Executing: Move to {target}",
+            "grasp": lambda target: f"Executing: Grasp {target}",
+            "release": lambda target: f"Executing: Release {target}"
+        }
+        self.task_network = {
+            "fetch": [
+                {"condition": "is_at_table", "subtasks": ["move_to", "grasp", "move_to", "release"]}
+            ]
+        }
 
-    def learn_task(self, instruction):
-        parsed = self.parser.parse_conditional(instruction)
-        print(f"[Agent] Parsed Instruction: {parsed}")
-        
-        if parsed['type'] == 'conditional':
-            rule_name = f"rule_{parsed['condition']}_to_{parsed['action']}"
-            self.pm.add_task(rule_name, parsed)
-        else:
-            self.pm.add_task("simple_task", parsed)
+    def solve_hierarchical(self, complex_task, target):
+        print(f"[HTN Planner] Solving task: {complex_task} for {target}")
+        if complex_task in self.task_network:
+            plan = self.task_network[complex_task][0]["subtasks"]
+            execution_plan = []
+            for step in plan:
+                if step in self.primitive_operators:
+                    execution_plan.append(self.primitive_operators[step](target))
+            return execution_plan
+        return ["Error: No decomposition found."]
+
+def run_htn_demo():
+    agent = ITLAgent()
+    plan = agent.solve_hierarchical("fetch", "red_ball")
+    for action in plan:
+        print(f"  -> {action}")
+
+if __name__ == "__main__":
+    run_htn_demo()
