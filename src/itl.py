@@ -1,29 +1,64 @@
+class WorldState:
+    """
+    Simulated environment state to validate if tasks are achievable.
+    """
+    def __init__(self):
+        self.objects = {"red_block": "table", "blue_box": "shelf"}
+        self.agent_hand = None
+
+    def check_object(self, obj):
+        return obj in self.objects
+
+class ProceduralMemory:
+    """
+    Stores learned task structures (Operator representations).
+    """
+    def __init__(self):
+        self.learned_tasks = {}
+
+    def add_task(self, name, procedure):
+        print(f"[PM] Learning new task: {name} -> {procedure}")
+        self.learned_tasks[name] = procedure
+
 class InstructionParser:
-    """
-    Parses natural language instructions into agent-executable goal structures.
-    """
-    def __init__(self, vocabulary):
-        self.vocab = vocabulary
+    def __init__(self):
+        self.core_vocabulary = ["pick", "place", "move", "if", "then"]
 
-    def parse(self, instruction):
-        words = instruction.lower().split()
-        if "pick" in words and "up" in words:
-            item = self._extract_target(words, ["pick", "up"])
-            return {"goal": "achieve_possession", "object": item}
-        return {"goal": "unknown"}
+    def parse_conditional(self, instruction):
+        """
+        Parses complex conditional instructions: 'If [condition], then [action]'
+        """
+        instruction = instruction.lower()
+        if "if" in instruction and "then" in instruction:
+            parts = instruction.split("then")
+            condition_part = parts[0].replace("if", "").strip()
+            action_part = parts[1].strip()
+            return {
+                "type": "conditional",
+                "condition": self._extract_predicate(condition_part),
+                "action": self._extract_action(action_part)
+            }
+        else:
+            return {"type": "simple", "action": self._extract_action(instruction)}
 
-    def _extract_target(self, words, keywords):
-        target = [w for w in words if w not in keywords and w in self.vocab]
-        return target[0] if target else "unknown"
+    def _extract_action(self, text):
+        return f"op_{text.replace(' ', '_')}"
+
+    def _extract_predicate(self, text):
+        return f"pred_{text.replace(' ', '_')}"
 
 class ITLAgent:
     def __init__(self):
-        self.parser = InstructionParser(["ball", "block", "key"])
-        self.task_memory = {}
+        self.world = WorldState()
+        self.pm = ProceduralMemory()
+        self.parser = InstructionParser()
 
-    def process_instruction(self, instruction):
-        goal = self.parser.parse(instruction)
-        print(f"DEBUG: ITL Agent decoded goal: {goal}")
-        # Map goal to internal procedure
-        self.task_memory[goal['object']] = "execute_grasp"
-        return goal
+    def learn_task(self, instruction):
+        parsed = self.parser.parse_conditional(instruction)
+        print(f"[Agent] Parsed Instruction: {parsed}")
+        
+        if parsed['type'] == 'conditional':
+            rule_name = f"rule_{parsed['condition']}_to_{parsed['action']}"
+            self.pm.add_task(rule_name, parsed)
+        else:
+            self.pm.add_task("simple_task", parsed)
